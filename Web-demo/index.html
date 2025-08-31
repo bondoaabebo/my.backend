@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>Player Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,sans-serif;margin:20px;background:#0b0b0b;color:#fff;}
+    .player-wrap{position:relative;max-width:900px;margin:auto;}
+    video{width:100%;background:#000;}
+    .wm{position:absolute;top:10px;right:10px;padding:6px 10px;background:rgba(255,255,255,.15);color:#fff;font-size:14px;backdrop-filter:blur(2px);border-radius:8px;pointer-events:none;animation:drift 10s linear infinite alternate;}
+    @keyframes drift{from{transform:translate(0,0)}to{transform:translate(-20px,12px)}}
+    .blurred{filter:blur(18px);}
+  </style>
+</head>
+<body>
+<h1>مشغل محمي (Demo)</h1>
+<div>
+<label>توكن الدخول (JWT):</label>
+<input id="authToken" style="width:100%" placeholder="Bearer token من /auth/login أو /auth/register">
+</div>
+<div style="margin-top:8px">
+<input id="courseId" placeholder="courseId">
+<input id="videoId" placeholder="videoId">
+<button id="playBtn">تشغيل</button>
+</div>
+<div class="player-wrap" style="margin-top:16px">
+  <video id="vid" controls playsinline></video>
+  <div id="wm" class="wm"></div>
+</div>
+<script type="module" src="./player.js"></script>
+</body>
+</html>
