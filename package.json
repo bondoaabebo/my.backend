@@ -1,15 +1,14 @@
 {
+    "$schema": "https://json.schemastore.org/package.json",
   "name": "edu-platform-backend",
   "version": "1.0.0",
   "description": "Education platform backend with license server",
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",

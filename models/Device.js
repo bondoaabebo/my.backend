@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const deviceSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-  deviceId: { type: String, index: true },
-  userAgent: String,
-  lastSeenAt: Date
-}, { timestamps: true });
+  device_id: { type: String, required: true, unique: true },
+  user_id: { type: String, required: true },
+  device_pubkey_pem: { type: String, required: true },
+  device_info: { type: Object },
+  status: { type: String, default: "active" },
+  registered_at: { type: Date, default: Date.now },
+});
 
-deviceSchema.index({ user: 1, deviceId: 1 }, { unique: true });
-
-export default mongoose.model('Device', deviceSchema);
+export default mongoose.model("Device", deviceSchema);

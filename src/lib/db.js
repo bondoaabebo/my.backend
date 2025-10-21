@@ -1,48 +1,68 @@
-// lib/db.js
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
-const users = new Map();      // userId -> user record
-const devices = new Map();    // deviceId -> device record
-const contents = new Map();   // contentId -> { keyEncrypted, keyId }
-const licenses = new Map();   // licenseId -> license record
-const auditLogs = [];
+// --------------------- Schemas ---------------------
+const userSchema = new mongoose.Schema({
+  _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  name: String,
+  email: String,
+  createdAt: { type: Date, default: Date.now }
+});
 
-function addUser(u) { users.set(u.id, u); }
-function getUser(id) { return users.get(id); }
+const deviceSchema = new mongoose.Schema({
+  device_id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  user_id: String,
+  type: String,
+  createdAt: { type: Date, default: Date.now }
+});
 
-function addDevice(d) { devices.set(d.device_id, d); }
-function getDevice(id) { return devices.get(id); }
+const contentSchema = new mongoose.Schema({
+  content_id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  keyEncrypted: String,
+  keyId: String,
+  createdAt: { type: Date, default: Date.now }
+});
 
-function addContent(c) { contents.set(c.content_id, c); }
-function getContent(content_id) { return contents.get(content_id); }
+const licenseSchema = new mongoose.Schema({
+  license_id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  content_id: String,
+  device_id: String,
+  status: { type: String, default: 'active' },
+  createdAt: { type: Date, default: Date.now },
+  revoked_by: String,
+  revoked_at: Date
+});
 
-function addLicense(l) { licenses.set(l.license_id, l); }
-function getActiveLicensesFor(content_id, device_id) {
-  // simple concurrency check
-  const out = [];
-  for (const l of licenses.values()) {
-    if (l.content_id === content_id && l.status === 'active') out.push(l);
-  }
-  return out;
+const auditLogSchema = new mongoose.Schema({
+  event: String,
+  data: mongoose.Schema.Types.Mixed,
+  timestamp: { type: Date, default: Date.now }
+});
+
+// --------------------- Models ---------------------
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+const Device = mongoose.model('Device', deviceSchema);
+const Content = mongoose.model('Content', contentSchema);
+const License = mongoose.model('License', licenseSchema);
+const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+
+// --------------------- Functions ---------------------
+async function addUser(u) { return (await new User(u).save())._id; }
+async function getUser(id) { return User.findById(id); }
+async function addDevice(d) { return (await new Device(d).save()).device_id; }
+async function getDevice(id) { return Device.findById(id); }
+async function addContent(c) { return (await new Content(c).save()).content_id; }
+async function getContent(content_id) { return Content.findOne({ content_id }); }
+async function addLicense(l) { return (await new License(l).save()).license_id; }
+async function getActiveLicensesFor(content_id, device_id) { return License.find({ content_id, status: 'active' }); }
+async function revokeLicense(license_id, by) {
+  const doc = await License.findById(license_id);
+  if (!doc) return false;
+  doc.status = 'revoked';
+  doc.revoked_by = by;
+  doc.revoked_at = new Date();
+  await doc.save();
+  return true;
 }
+async function audit(event, data = {}) { await new AuditLog({ event, data }).save(); }
 
-function revokeLicense(license_id, by) {
-  const l = licenses.get(license_id);
-  if (l) {
-    l.status = 'revoked';
-    l.revoked_by = by;
-    l.revoked_at = Date.now();
-    return true;
-  }
-  return false;
-}
-
-function audit(event) { auditLogs.push(event); }
-
-export {
-  addUser, getUser,
-  addDevice, getDevice,
-  addContent, getContent,
-  addLicense, getActiveLicensesFor, revokeLicense,
-  audit, auditLogs
-};
+export { addUser, getUser, addDevice, getDevice, addContent, getContent, addLicense, getActiveLicensesFor, revokeLicense, audit };

@@ -4,10 +4,16 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  subscriptionExpires: { type: Date }, // انتهاء الاشتراك
-  deviceId: { type: String } // لتحديد الجهاز المسجل
+
+  // تاريخ نهاية الاشتراك
+  subscriptionEndDate: { type: Date, required: true },
+
+  // قائمة الأجهزة المفعّلة (لتحديد الجهاز المسموح له)
+  activeDevices: {
+    type: [String],
+    default: [],
+  },
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
-
 export default User;
