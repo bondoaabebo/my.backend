@@ -1,3 +1,4 @@
+// server.js
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -5,14 +6,12 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import winston from 'winston';
 
-import { cfg } from '../../config.js';
+import { cfg } from './config.js';
 import authRoutes from './routes/auth.js';
 import vouchersRoutes from './routes/vouchers.js';
 import coursesRoutes from './routes/courses.js';
 import devicesRoutes from './routes/devices.js';
 import playbackRoutes from './routes/playback.js';
-import { createContentKey } from './lib/kms.js';
-import { addContent } from './lib/db.js';
 
 // --------------------- Logger Setup ---------------------
 const requestLogger = winston.createLogger({
@@ -42,10 +41,11 @@ const errorLogger = winston.createLogger({
 const app = express();
 
 // --------------------- Middleware ---------------------
-app.use(cors({ origin: 'https://my-frontend-blue-theta.vercel.app' }));
+app.use(cors({ origin: 'https://yourfrontend.vercel.app' })); // ضع رابط الواجهة الأمامية
 app.use(helmet());
 app.use(express.json());
 
+// Request Logging
 app.use((req, res, next) => {
   const start = Date.now();
   res.on('finish', () => {
@@ -56,8 +56,22 @@ app.use((req, res, next) => {
 });
 
 // --------------------- Rate Limiting ---------------------
-const generalLimiter = rateLimit({ windowMs: 15*60*1000, max: 200 });
-const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 50, message: { error: 'Too many attempts, try later' } });
+// عام لجميع المسارات
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 200, // أقصى 200 طلب لكل IP
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// خاص بالمسارات الحساسة مثل auth
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 50, // أقصى 50 طلب لكل IP
+  message: { error: 'Too many attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 app.use(generalLimiter);
 
@@ -70,32 +84,28 @@ app.use('/playback', playbackRoutes);
 
 app.get('/', (req, res) => res.send('Edu Platform API Running'));
 
-// --------------------- Bootstrap sample content ---------------------
-(async () => {
-  try {
-    await mongoose.connect(cfg.mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
-    requestLogger.info('✅ Connected to MongoDB');
-
-    const content_id = 'vid-1';
-    const ck = await createContentKey(content_id);
-    await addContent({ content_id, keyEncrypted: ck.wrappedKey, keyId: ck.keyId });
-    requestLogger.info(`Sample content created: ${content_id}`);
-
-    app.listen(cfg.port, () => requestLogger.info(` Server running on http://localhost:${cfg.port}`));
-  } catch (err) {
-    errorLogger.error('❌ Server startup failed', err);
-    process.exit(1);
-  }
-})();
-
 // --------------------- Error Middleware ---------------------
 app.use((err, req, res, next) => {
-  let logMessage = `${req.method} ${req.originalUrl} - ${err.stack}`;
-  if (req.method === 'POST') logMessage += `\nBody: ${JSON.stringify(req.body)}\nHeaders: ${JSON.stringify(req.headers)}`;
-  errorLogger.error(logMessage);
+  errorLogger.error(`${req.method} ${req.originalUrl} - ${err.stack}`);
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
+// --------------------- MongoDB Connection ---------------------
+mongoose.connect(cfg.mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    requestLogger.info('✅ Connected to MongoDB');
+  })
+  .catch(err => errorLogger.error('❌ MongoDB connection failed', err));
+
 // --------------------- Handle Unhandled Errors ---------------------
-process.on('unhandledRejection', (reason) => errorLogger.error('Unhandled Rejection:', reason));
-process.on('uncaughtException', (err) => { errorLogger.error('Uncaught Exception:', err); process.exit(1); });
+process.on('unhandledRejection', (reason) => {
+  errorLogger.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  errorLogger.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// ✅ تصدير التطبيق لـ Vercel
+export default app;
