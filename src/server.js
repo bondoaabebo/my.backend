@@ -5,7 +5,7 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import winston from 'winston';
 
-import { cfg } from './config.js';
+import { cfg } from '../../config.js';
 import authRoutes from './routes/auth.js';
 import vouchersRoutes from './routes/vouchers.js';
 import coursesRoutes from './routes/courses.js';
@@ -42,7 +42,7 @@ const errorLogger = winston.createLogger({
 const app = express();
 
 // --------------------- Middleware ---------------------
-app.use(cors({ origin: 'https://yourfrontend.com' }));
+app.use(cors({ origin: 'https://my-frontend-blue-theta.vercel.app' }));
 app.use(helmet());
 app.use(express.json());
 
@@ -81,7 +81,7 @@ app.get('/', (req, res) => res.send('Edu Platform API Running'));
     await addContent({ content_id, keyEncrypted: ck.wrappedKey, keyId: ck.keyId });
     requestLogger.info(`Sample content created: ${content_id}`);
 
-    app.listen(cfg.port, () => requestLogger.info(`🚀 Server running on http://localhost:${cfg.port}`));
+    app.listen(cfg.port, () => requestLogger.info(` Server running on http://localhost:${cfg.port}`));
   } catch (err) {
     errorLogger.error('❌ Server startup failed', err);
     process.exit(1);
