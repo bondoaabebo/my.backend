@@ -1,5 +1,5 @@
 import express from 'express';
-import Voucher from '../models/Voucher.js';
+import Voucher from '../src/models/Voucher.js';
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
 const { aesGcmEncrypt, aesGcmDecrypt, generateAesKeyBase64 } = require('./crypto-utils');
 const { v4: uuidv4 } = require('uuid');
-const { cfg } = require('../../../config.js');
+const { cfg } = require('../config.js');
 
 const MASTER_KEY = cfg.masterKmsKey;
 

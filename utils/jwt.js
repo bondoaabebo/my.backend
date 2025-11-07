@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { cfg } from "../src/config.js";
+import { cfg } from "../config.js";
 
 // مدة قصيرة للوصول
 export function signAuthToken(payload, expiresIn = "15m") {

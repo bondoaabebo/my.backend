@@ -1,20 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
+import User from '../models/User.js'; // تأكدي إن المسار صحيح
 import { signAuthToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
-import rateLimit from 'express-rate-limit';
-import { cfg } from '../src/config.js';
+import { cfg } from '../config.js';
 
 const router = express.Router();
-
-// --------------------- Rate Limiter ---------------------
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 دقيقة
-  max: 10,
-  message: { message: "محاولات كثيرة جدًا، حاول لاحقًا" }
-});
-
-router.use(authLimiter);
 
 // --------------------- تسجيل الدخول ---------------------
 router.post('/login', async (req, res) => {
@@ -35,16 +25,14 @@ router.post('/login', async (req, res) => {
 
     // التحقق من عدد الأجهزة
     user.activeDevices = user.activeDevices || [];
-    const deviceLimit = cfg.deviceLimit;
     if (!user.activeDevices.includes(deviceId)) {
-      if (user.activeDevices.length >= deviceLimit)
-        return res.status(403).json({ message: `تم تجاوز عدد الأجهزة المسموح بها (${deviceLimit})` });
+      if (user.activeDevices.length >= cfg.deviceLimit)
+        return res.status(403).json({ message: `تم تجاوز عدد الأجهزة المسموح بها (${cfg.deviceLimit})` });
       user.activeDevices.push(deviceId);
     }
 
     await user.save();
 
-    // توليد توكن
     const accessToken = signAuthToken({ userId: user._id, deviceId });
     const refreshToken = signRefreshToken({ userId: user._id, deviceId });
 
@@ -73,6 +61,7 @@ router.post('/refresh', async (req, res) => {
     res.status(401).json({ message: "Refresh token غير صالح أو انتهت صلاحيته" });
   }
 });
+
 // --------------------- تسجيل مستخدم جديد ---------------------
 router.post('/register', async (req, res) => {
   try {
@@ -89,7 +78,7 @@ router.post('/register', async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      subscriptionEndDate: new Date(), // مؤقتًا لغاية تضيفي نظام الاشتراك
+      subscriptionEndDate: new Date(), // مؤقت، ضبطيه حسب نظام الاشتراك
       activeDevices: []
     });
 
@@ -102,3 +91,4 @@ router.post('/register', async (req, res) => {
 });
 
 export default router;
+

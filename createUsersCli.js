@@ -11,7 +11,7 @@ import readline from "readline";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "./models/User.js";                // تأكد المسار صحيح
-import { cfg } from "./src/config.js";             // تأكد المسار صحيح
+import { cfg } from "./config.js";             // تأكد المسار صحيح
 
 async function connectDB() {
   await mongoose.connect(cfg.mongoUri);
