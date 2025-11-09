@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import serverless from "serverless-http";
 import { cfg } from "../../config.js";
 
 const app = express();
@@ -30,4 +31,5 @@ app.get("/", async (req, res) => {
   }
 });
 
-export default app;
+// تحويل الـ Express app لـ Serverless Function
+export const handler = serverless(app);

@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json.schemastore.org/package.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "edu-platform-backend",
   "version": "1.0.0",
   "description": "Education platform backend with license server",
@@ -21,7 +21,8 @@
     "mongoose": "^8.4.0",
     "morgan": "^1.10.1",
     "uuid": "^11.1.0",
-    "winston": "^3.13.0"
+    "winston": "^3.13.0",
+    "serverless-http": "^3.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
