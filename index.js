@@ -5,7 +5,16 @@ import cors from "cors";
 import { cfg } from "./config.js";
 
 const app = express();
-app.use(cors());
+
+// 🔹 إعداد CORS
+const allowedOrigins = [
+   "https://my-frontend-ten-vert.vercel.app/"
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+}));
+
 app.use(express.json());
 
 let isConnected = false;
@@ -38,4 +47,4 @@ app.get("/", async (req, res) => {
 
 // 🚀 تشغيل السيرفر
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
