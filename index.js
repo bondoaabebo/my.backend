@@ -7,17 +7,24 @@ import authRoutes from "./routes/auth.js";
 
 const app = express();
 
-// ✅ إعداد CORS فقط للفرونت الرسمي على Vercel
+// ✅ قائمة الدومينات المسموح بها
+const allowedOrigins = [
+  "https://frontend-two-inky-65.vercel.app",
+  "https://frontend-git-main-bondoaas-projects.vercel.app",
+  "https://frontend-epojns9gm-bondoaas-projects.vercel.app"
+];
+
+// ✅ إعداد CORS لجميع الدومينات المسموح بها
 app.use(
   cors({
-    origin: "https://frontend-two-inky-65.vercel.app",
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
 // ✅ السماح لجميع preflight requests
 app.options("*", cors({
-  origin: "https://frontend-two-inky-65.vercel.app",
+  origin: allowedOrigins,
   credentials: true,
 }));
 
