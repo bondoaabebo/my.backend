@@ -1,7 +1,10 @@
+// backend/routes/auth.js
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js'; // تأكدي إن المسار صحيح
+import crypto from 'crypto';
+import User from '../models/User.js';
 import { signAuthToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
+import  sendEmail from '../utils/email.js';
 import { cfg } from '../config.js';
 
 const router = express.Router();
@@ -43,25 +46,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// --------------------- تجديد Access Token ---------------------
-router.post('/refresh', async (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ message: "Refresh token مطلوب" });
-
-    const payload = verifyRefreshToken(refreshToken);
-    const user = await User.findById(payload.userId);
-    if (!user || !user.activeDevices.includes(payload.deviceId))
-      return res.status(403).json({ message: "غير مصرح" });
-
-    const newAccessToken = signAuthToken({ userId: user._id, deviceId: payload.deviceId });
-    res.json({ accessToken: newAccessToken });
-  } catch (err) {
-    console.error(err);
-    res.status(401).json({ message: "Refresh token غير صالح أو انتهت صلاحيته" });
-  }
-});
-
 // --------------------- تسجيل مستخدم جديد ---------------------
 router.post('/register', async (req, res) => {
   try {
@@ -78,7 +62,7 @@ router.post('/register', async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      subscriptionEndDate: new Date(), // مؤقت، ضبطيه حسب نظام الاشتراك
+      subscriptionEndDate: new Date(),
       activeDevices: []
     });
 
@@ -90,5 +74,58 @@ router.post('/register', async (req, res) => {
   }
 });
 
-export default router;
+// --------------------- نسيت كلمة المرور ---------------------
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (user) {
+      // إنشاء توكن عشوائي
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
 
+      user.resetPasswordToken = hashedToken;
+      user.resetPasswordExpires = Date.now() + 3600000; // ساعة واحدة
+      await user.save();
+
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+      await sendEmail(user.email, "استرجاع كلمة المرور", `رابط الاسترجاع: ${resetLink}`);
+    }
+
+    // رسالة عامة لمنع كشف البريد
+    res.json({ message: "إذا كان البريد مسجلاً، سيصلك رابط استرجاع كلمة المرور" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "حدث خطأ أثناء إرسال البريد" });
+  }
+});
+
+// --------------------- تغيير كلمة المرور ---------------------
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) return res.status(400).json({ message: "الرابط غير صالح أو منتهي" });
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: "تم تغيير كلمة المرور بنجاح" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "حدث خطأ أثناء تغيير كلمة المرور" });
+  }
+});
+
+export default router;

@@ -1,25 +1,31 @@
-// index.js
+// backend/index.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import { cfg } from "./config.js";
+import authRoutes from "./routes/auth.js";
 
 const app = express();
 
-// 🔹 إعداد CORS
-const allowedOrigins = [
-   "https://my-frontend-ten-vert.vercel.app/"
-];
+// ✅ إعداد CORS فقط للفرونت الرسمي على Vercel
+app.use(
+  cors({
+    origin: "https://frontend-two-inky-65.vercel.app",
+    credentials: true,
+  })
+);
 
-app.use(cors({
-  origin: allowedOrigins,
+// ✅ السماح لجميع preflight requests
+app.options("*", cors({
+  origin: "https://frontend-two-inky-65.vercel.app",
+  credentials: true,
 }));
 
+// ✅ قراءة JSON من الطلبات
 app.use(express.json());
 
-let isConnected = false;
-
 // 🔗 اتصال قاعدة البيانات
+let isConnected = false;
 async function connectDB() {
   if (isConnected) return;
   try {
@@ -34,17 +40,25 @@ async function connectDB() {
   }
 }
 
-// 🧭 Route تجريبي
+// 🧭 Route تجريبي للتأكد من تشغيل السيرفر و CORS
 app.get("/", async (req, res) => {
   try {
     await connectDB();
-    res.json({ message: "Backend running on Railway ✅" });
+    res.json({ message: "✅ Backend running and CORS OK" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Database connection failed ❌" });
+    res.status(500).json({ error: "❌ Database connection failed" });
   }
 });
 
+// 🧪 مسار تجريبي للتأكد من CORS
+app.get("/api/test", (req, res) => {
+  res.json({ message: "✅ CORS working!" });
+});
+
+// 🔐 مسارات المصادقة
+app.use("/auth", authRoutes);
+
 // 🚀 تشغيل السيرفر
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
