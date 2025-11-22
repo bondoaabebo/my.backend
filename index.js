@@ -9,21 +9,24 @@ const app = express();
 
 // ✅ قائمة الدومينات المسموح بها
 const allowedOrigins = ["https://frontend-seven-beta-22.vercel.app"];
-  
 
 // ✅ إعداد CORS لجميع الدومينات المسموح بها
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    // السماح بأي request من نفس الدومين أو لو origin مش موجود (مثلاً Postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
 
 // ✅ السماح لجميع preflight requests
-app.options("*", cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+app.options("*", cors());
 
 // ✅ قراءة JSON من الطلبات
 app.use(express.json());
