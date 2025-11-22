@@ -1,4 +1,3 @@
-// backend/index.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -10,10 +9,10 @@ const app = express();
 // ✅ قائمة الدومينات المسموح بها
 const allowedOrigins = ["https://frontend-seven-beta-22.vercel.app"];
 
-// ✅ إعداد CORS لجميع الدومينات المسموح بها
+// ✅ إعداد CORS شامل لكل الطلبات
 app.use(cors({
   origin: function(origin, callback) {
-    // السماح بأي request من نفس الدومين أو لو origin مش موجود (مثلاً Postman)
+    // السماح بأي request من frontend أو لو origin مش موجود (Postman مثلاً)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -21,11 +20,11 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-  allowedHeaders: ["Content-Type","Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ✅ السماح لجميع preflight requests
+// ✅ التعامل مع preflight requests
 app.options("*", cors());
 
 // ✅ قراءة JSON من الطلبات
