@@ -8,11 +8,8 @@ import authRoutes from "./routes/auth.js";
 const app = express();
 
 // ✅ قائمة الدومينات المسموح بها
-const allowedOrigins = [
-  "https://frontend-two-inky-65.vercel.app",
-  "https://frontend-git-main-bondoaas-projects.vercel.app",
-  "https://frontend-epojns9gm-bondoaas-projects.vercel.app"
-];
+const allowedOrigins = ["https://frontend-seven-beta-22.vercel.app"];
+  
 
 // ✅ إعداد CORS لجميع الدومينات المسموح بها
 app.use(
@@ -64,7 +61,7 @@ app.get("/api/test", (req, res) => {
 });
 
 // 🔐 مسارات المصادقة
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 // 🚀 تشغيل السيرفر
 const PORT = process.env.PORT || 5001;
