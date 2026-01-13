@@ -1,5 +1,5 @@
 import express from 'express';
-import License from '../models/license.js';
+import License from '../models/License.js';
 import Device from '../models/device.js';
 
 const router = express.Router();
