@@ -28,27 +28,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =========================
-// CORS (محكوم ومؤمن)
+// ✅ CORS (مظبوط لـ Vercel + Railway)
 // =========================
 app.use(
   cors({
     origin: (origin, callback) => {
-      // السماح بالـ server-side requests
+      // السماح للـ preflight و server-side
       if (!origin) return callback(null, true);
 
       if (cfg.allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(
-        new Error(`CORS blocked for origin: ${origin}`),
-        false
-      );
+      // ❗ ممنوع Error
+      return callback(null, false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// مهم جدًا
 app.options("*", cors());
 
 // =========================
