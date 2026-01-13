@@ -14,7 +14,7 @@ import { cfg } from "./config.js";
 // =========================
 import authRoutes from "./routes/auth.js";
 import adminsRoutes from "./routes/admins.js";
-import licenseRoutes from "./routes/License.js";
+import licenseRoutes from "./routes/license.js";
 import playbackRoutes from "./routes/playback.js";
 import coursesRoutes from "./routes/courses.js";
 import voucherRoutes from "./routes/voucher.js";
