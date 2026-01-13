@@ -1,42 +1,15 @@
-import express from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import Admin from "../models/admins.js";
-
-const router = express.Router();
-
 router.post("/login", async (req, res) => {
-  try {
-const password = req.body.password?.trim();
+  console.log("BODY:", req.body); // 👈 مهم
+  console.log("HEADERS:", req.headers["content-type"]);
 
-    if (!password) {
-      return res.status(400).json({ error: "Password required" });
-    }
+  const password = req.body?.password?.trim();
 
-    const admin = await Admin.findOne();
-
-    if (!admin) {
-      return res.status(404).json({ error: "Admin not found" });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
-
-    // ✅ إنشاء التوكن
-    const token = jwt.sign(
-      { role: "admin" },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    res.json({ token });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+  if (!password) {
+    return res.status(400).json({ error: "Password required" });
   }
+
+  res.json({ ok: true });
 });
+
 
 export default router;
