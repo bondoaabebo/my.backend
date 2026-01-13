@@ -1,7 +1,7 @@
 import { Router } from "express";
-import Course from "../models/Courses.js";
-import Device from "../models/Device.js";
-import License from "../models/License.js";
+import Course from "../models/courses.js";
+import Device from "../models/device.js";
+import License from "../models/license.js";
 import { signPlaybackToken, verifyPlaybackToken } from "../utils/tokens.js";
 
 const router = Router();

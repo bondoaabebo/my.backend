@@ -1,9 +1,9 @@
 // backend/routes/license.js
 import express from 'express';
-import License from '../models/License.js';
-import Device from '../models/Device.js';
-import Voucher from '../models/Voucher.js'; // لازم نستورد الـ Voucher
-import Course from '../models/Courses.js'; // لو عايزين نرجع بيانات الكورس بعد التفعيل
+import License from '../models/license.js';
+import Device from '../models/device.js';
+import Voucher from '../models/voucher.js'; // لازم نستورد الـ Voucher
+import Course from '../models/courses.js'; // لو عايزين نرجع بيانات الكورس بعد التفعيل
 
 const router = express.Router();
 
