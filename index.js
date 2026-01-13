@@ -28,34 +28,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =========================
-// ✅ CORS (مظبوط لـ Vercel + Railway)
+// ✅ CORS (حل نهائي بدون كسر requests)
 // =========================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://educ-platform-frontend-nmne86bo2-bondoaas-projects-f0daaf9d.vercel.app"
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // السماح للـ preflight و server-side
+      // السماح للـ server-side & Postman
       if (!origin) return callback(null, true);
 
-      if (cfg.allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      // ❗ ممنوع Error
+      // مهم: ما نرميش Error
       return callback(null, false);
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-// مهم جدًا
-app.options("*", cors());
 
 // =========================
 // Middlewares
 // =========================
 app.use(express.json());
+
+// =========================
+// Static files (لو احتاجتي manifest وغيره)
+// =========================
+app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
 // 🎥 Serve videos
@@ -76,12 +81,15 @@ mongoose
   );
 
 // =========================
-// API routes
+// Test Route
 // =========================
 app.get("/api/test", (req, res) => {
   res.json({ message: "API Working + CORS OK" });
 });
 
+// =========================
+// API Routes
+// =========================
 app.use("/api/auth", authRoutes);
 app.use("/admins", adminsRoutes);
 app.use("/api/license", licenseRoutes);
@@ -97,3 +105,4 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+;
