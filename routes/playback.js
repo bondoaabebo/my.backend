@@ -2,9 +2,9 @@ import { Router } from "express";
 import path from "path";
 import fs from "fs";
 
-import Course from "../models/courses.js";
-import License from "../models/license.js";
-import Device from "../models/device.js";
+import Course from "../models/Courses.js";
+import License from "../models/License.js";
+import Device from "../models/Device.js";
 
 import { signPlaybackToken, verifyPlaybackToken } from "../utils/tokens.js";
 

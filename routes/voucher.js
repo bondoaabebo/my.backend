@@ -1,5 +1,5 @@
 import { Router } from "express";
-import Voucher from "../models/voucher.js";
+import Voucher from "../models/Voucher.js";
 import { adminAuth } from "../middleware/adminsAuth.js";
 import crypto from "crypto";
 
