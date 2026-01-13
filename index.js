@@ -28,24 +28,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =========================
-// ✅ CORS (حل نهائي بدون كسر requests)
+// Public files (قبل أي auth أو routes)
 // =========================
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://educ-platform-frontend-nmne86bo2-bondoaas-projects-f0daaf9d.vercel.app"
-];
+app.use(express.static(path.join(__dirname, "public")));
 
+// =========================
+// CORS (موبايل + Vercel + Local)
+// =========================
 app.use(
   cors({
     origin: (origin, callback) => {
-      // السماح للـ server-side & Postman
+      // يسمح للـ mobile / webview / postman
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      // يسمح لأي subdomain من vercel
+      if (
+        origin.endsWith(".vercel.app") ||
+        origin === "http://localhost:5173"
+      ) {
         return callback(null, true);
       }
 
-      // مهم: ما نرميش Error
       return callback(null, false);
     },
     credentials: true,
@@ -56,11 +59,6 @@ app.use(
 // Middlewares
 // =========================
 app.use(express.json());
-
-// =========================
-// Static files (لو احتاجتي manifest وغيره)
-// =========================
-app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
 // 🎥 Serve videos
@@ -105,4 +103,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-;
