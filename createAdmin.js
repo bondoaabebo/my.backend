@@ -1,0 +1,37 @@
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import Admin from "./models/admins.js";
+
+// ✨ عدلي كلمة السر هنا فقط
+const PASSWORD = "Bondoaa";
+
+// رابط قاعدة البيانات
+const MONGO_URI = "mongodb+srv://app_user:0SB5xZFQOrX7UmpU@cluster0.foa0bgz.mongodb.net/eduplatform";
+
+async function createAdmin() {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ Mongo Connected");
+
+    // مسح أي أدمن قديم
+    await Admin.deleteMany({});
+    console.log("🗑️ Old admin deleted");
+
+    // تشفير الباسورد
+    const hash = await bcrypt.hash(PASSWORD, 10);
+    console.log("🔐 HASH:", hash);
+
+    // إنشاء أدمن جديد
+    await Admin.create({ password: hash });
+
+    console.log("✅ Admin created successfully");
+    console.log("👉 PASSWORD =", PASSWORD);
+
+    process.exit();
+  } catch (err) {
+    console.error("❌ Error:", err);
+    process.exit(1);
+  }
+}
+
+createAdmin();

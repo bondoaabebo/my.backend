@@ -1,16 +1,10 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  subscriptionEndDate: { type: Date, required: true },
-  activeDevices: { type: [String], default: [] },
+const VoucherSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true, index: true },
+  days: { type: Number, default: 15 },
+  redeemed: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
 
-  // حقول نسيت كلمة المرور
-  resetPasswordToken: { type: String },
-  resetPasswordExpires: { type: Date },
-}, { timestamps: true });
-
-const User = mongoose.model("User", userSchema);
-export default User;
+export default mongoose.model('Voucher', VoucherSchema);

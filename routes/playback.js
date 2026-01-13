@@ -1,52 +1,130 @@
-import { Router } from 'express';
-import { authRequired } from '../middleware/auth.js';
-import { signPlaybackToken, verifyPlaybackToken } from '../utils/tokens.js';
-import Enrollment from '../models/Enrollment.js';
-import Course from '../models/Course.js';
-import Device from '../models/Device.js';
+import { Router } from "express";
+import path from "path";
+import fs from "fs";
 
-const r = Router();
+import Course from "../models/courses.js";
+import License from "../models/license.js";
+import Device from "../models/device.js";
 
-r.post('/token', authRequired, async (req,res) => {
-  const { courseId, videoId, deviceId } = req.body;
-  if (!courseId || !videoId || !deviceId) return res.status(400).json({ error: 'courseId, videoId, deviceId required' });
+import { signPlaybackToken, verifyPlaybackToken } from "../utils/tokens.js";
 
-  const dev = await Device.findOne({ user:req.user.id, deviceId });
-  if (!dev) return res.status(403).json({ error: 'Unregistered device' });
+const router = Router();
 
-  const en = await Enrollment.findOne({ user:req.user.id, course:courseId, expiresAt: {$gt:new Date()} });
-  if (!en) return res.status(403).json({ error: 'Not enrolled or expired' });
+/* ======================================================
+   Middleware: التحقق من الرخصة + الجهاز
+====================================================== */
+async function licenseAuth(req, res, next) {
+  const { code, deviceId } = req.body;
+
+  if (!code || !deviceId) {
+    return res.status(400).json({ error: "code & deviceId required" });
+  }
+
+  const device = await Device.findOne({ device_id: deviceId });
+  if (!device || device.status !== "active") {
+    return res.status(403).json({ error: "Device not registered or blocked" });
+  }
+
+  const license = await License.findOne({
+    code,
+    deviceId,
+    isActive: true,
+    validUntil: { $gt: new Date() }
+  });
+
+  if (!license) {
+    return res.status(403).json({ error: "License expired or invalid" });
+  }
+
+  req.device = device;
+  req.license = license;
+  next();
+}
+
+/* ======================================================
+   توليد رابط التشغيل
+====================================================== */
+router.post("/get-url", licenseAuth, async (req, res) => {
+  const { courseId, videoId } = req.body;
+  const { license, device } = req;
 
   const course = await Course.findById(courseId);
-  if (!course || !course.isPublished) return res.status(404).json({ error: 'Course not found' });
-  const v = course.videos.find(x=>x.videoId===videoId);
-  if (!v) return res.status(404).json({ error: 'Video not found' });
-
-  const token = signPlaybackToken({ sub:req.user.id, courseId, videoId, deviceId }, '1h');
-  const playbackUrl = `/playback/stream/${videoId}?token=${token}`;
-  res.json({ playbackUrl, watermark:{ name:req.user.name||'', id:req.user.id } });
-});
-
-r.get('/stream/:videoId', async (req,res)=>{
-  const { token } = req.query;
-  if(!token) return res.status(401).json({ error:'Missing token' });
-
-  try{
-    const decoded = verifyPlaybackToken(token);
-    if(decoded.videoId !== req.params.videoId) throw new Error('Video mismatch');
-
-    const fakeHls = `https://example-cdn.com/protected/${decoded.videoId}/index.m3u8?xpt=${encodeURIComponent(token)}`;
-
-    // 🔒 منع التخزين المؤقت
-    res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-
-    return res.redirect(302, fakeHls);
-  }catch{
-    return res.status(401).json({ error:'Invalid/expired token' });
+  if (!course || !course.isPublished) {
+    return res.status(404).json({ error: "Course not found" });
   }
+
+  const video = course.videos.find(v => v.videoId === videoId);
+  if (!video) {
+    return res.status(404).json({ error: "Video not found" });
+  }
+
+  const token = signPlaybackToken(
+    {
+      code: license.code,
+      deviceId: device.device_id,
+      courseId,
+      videoId
+    },
+    "1h"
+  );
+
+  res.json({
+    playbackUrl: `/api/playback/stream/${videoId}/index.m3u8?token=${token}`
+  });
 });
 
+/* ======================================================
+   بث HLS (m3u8 + ts) — بدون AES
+====================================================== */
+router.get("/stream/:videoId/:file?", async (req, res) => {
+  const { token } = req.query;
+  const { videoId, file } = req.params;
 
-export default r;
+  if (!token) return res.status(401).end();
+
+  let payload;
+  try {
+    payload = verifyPlaybackToken(token);
+  } catch {
+    return res.status(401).end();
+  }
+
+  if (payload.videoId !== videoId) {
+    return res.status(403).end();
+  }
+
+  const videoDir = path.join(process.cwd(), "videos", videoId);
+  const fileName = file || "index.m3u8";
+  const filePath = path.join(videoDir, fileName);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).end();
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+
+  // ===== m3u8 =====
+  if (fileName.endsWith(".m3u8")) {
+    let manifest = fs.readFileSync(filePath, "utf8");
+
+    // إضافة التوكن لملفات ts فقط
+    manifest = manifest
+      .split("\n")
+      .map(line =>
+        line.endsWith(".ts") ? `${line}?token=${token}` : line
+      )
+      .join("\n");
+
+    res.type("application/vnd.apple.mpegurl");
+    return res.send(manifest);
+  }
+
+  // ===== ts =====
+  res.setHeader("Content-Type", "video/MP2T");
+  res.setHeader("Accept-Ranges", "bytes");
+  res.setHeader("Cache-Control", "no-store");
+
+  return res.sendFile(filePath);
+});
+
+export default router;

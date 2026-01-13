@@ -1,15 +1,15 @@
-export function signAuthToken(payload, expiresIn = "15m") {
-  return jwt.sign(payload, cfg.jwtSecret, { expiresIn, issuer: "edu-platform", audience: "edu-clients" });
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "secret123";
+
+export function signPlaybackToken(payload, expiresIn = "1h") {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn });
 }
 
-export function signRefreshToken(payload, expiresIn = "7d") {
-  return jwt.sign(payload, cfg.jwtSecret, { expiresIn, issuer: "edu-platform", audience: "edu-clients" });
-}
-
-export function verifyAuthToken(token) {
-  return jwt.verify(token, cfg.jwtSecret, { issuer: "edu-platform", audience: "edu-clients" });
-}
-
-export function verifyRefreshToken(token) {
-  return jwt.verify(token, cfg.jwtSecret, { issuer: "edu-platform", audience: "edu-clients" });
+export function verifyPlaybackToken(token) {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    throw new Error("Invalid or expired token");
+  }
 }
