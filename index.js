@@ -28,32 +28,38 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =========================
-// Public files (قبل أي auth أو routes)
+// ✅ Public files (manifest / assets)
 // =========================
 app.use(express.static(path.join(__dirname, "public")));
 
 // =========================
-// CORS (موبايل + Vercel + Local)
+// ✅ CORS (حل نهائي)
 // =========================
 app.use(
   cors({
     origin: (origin, callback) => {
-      // يسمح للـ mobile / webview / postman
+      // Postman / mobile / server-side
       if (!origin) return callback(null, true);
 
-      // يسمح لأي subdomain من vercel
-      if (
-        origin.endsWith(".vercel.app") ||
-        origin === "http://localhost:5173"
-      ) {
+      // أي مشروع Vercel
+      if (origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
 
-      return callback(null, false);
+      // Local dev
+      if (origin === "http://localhost:5173") {
+        return callback(null, true);
+      }
+
+      // ❗ ما نكسرش الطلب
+      return callback(null, true);
     },
     credentials: true,
   })
 );
+
+// لازم للـ preflight
+app.options("*", cors());
 
 // =========================
 // Middlewares
