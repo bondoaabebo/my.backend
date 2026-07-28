@@ -6,8 +6,8 @@ import Admin from "./models/admins.js";
 const PASSWORD = "Bondoaa";
 
 // رابط قاعدة البيانات
-const MONGO_URI = "mongodb+srv://app_user:0SB5xZFQOrX7UmpU@cluster0.foa0bgz.mongodb.net/eduplatform";
-
+const MONGO_URI =
+"mongodb+srv://bondoaabeboo_db_user:Loe6ByHseMboPpSY@eduplatform.8zvo8zq.mongodb.net/?retryWrites=true&w=majority&appName=eduplatform";
 async function createAdmin() {
   try {
     await mongoose.connect(MONGO_URI);
