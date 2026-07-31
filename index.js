@@ -17,7 +17,7 @@ import adminsRoutes from "./routes/admins.js";
 import licenseRoutes from "./routes/license.js";
 import playbackRoutes from "./routes/playback.js";
 import coursesRoutes from "./routes/courses.js";
-import voucherRoutes from "./routes/voucher.js";
+import voucherRoutes from "./routes/Voucher.js";
 
 const app = express();
 

@@ -27,3 +27,4 @@ router.post("/generate", adminAuth, async (req, res) => {
 });
 
 export default router;
+

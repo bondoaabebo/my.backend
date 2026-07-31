@@ -2,7 +2,7 @@
 import express from 'express';
 import License from '../models/license.js';
 import Device from '../models/device.js';
-import Voucher from '../models/Voucher.js'; // لازم نستورد اimport Voucher from "../models/Voucher.js";لـ Voucher
+import Voucher from "../models/Voucher.js";
 import Course from '../models/courses.js'; // لو عايزين نرجع بيانات الكورس بعد التفعيل
 
 const router = express.Router();
